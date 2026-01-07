@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "181461767605",
+    "project_id": "aidxpert-production",
+    "storage_bucket": "aidxpert-production.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:181461767605:android:d60d40ce09ef1ba4a0f5fc",
+        "android_client_info": {
+          "package_name": "com.fossgentechnologies.aidxpert_business.com"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtM047A29CjhNoAxWmiTGuVewUxcQRL4A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
