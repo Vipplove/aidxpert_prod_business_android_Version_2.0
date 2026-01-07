@@ -328,13 +328,11 @@ class RegisterDoctorController extends GetxController {
         final doctor = responseBody['doctorDetails'] as Map<String, dynamic>?;
 
         if (doctor != null) {
-          // --- Basic doctor info ---
           doctorCodeController.text = doctor['doctor_code']?.toString() ?? '';
           medicalRegNoController.text =
               doctor['medical_reg_no']?.toString() ?? '';
           isSurgeon.value = doctor['is_surgeon'] ?? false;
 
-          // --- Pricing ---
           pricing.clear();
           for (var p in (doctor['pricing'] as List<dynamic>?) ?? []) {
             pricing.add({
@@ -345,13 +343,11 @@ class RegisterDoctorController extends GetxController {
             });
           }
 
-          // --- Services ---
           services.clear();
           for (var s in (doctor['services'] as List<dynamic>?) ?? []) {
             services.add(s.toString());
           }
 
-          // --- Specializations ---
           specializations.clear();
           for (var sp in (doctor['specializations'] as List<dynamic>?) ?? []) {
             specializations.add(sp.toString());
