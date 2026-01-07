@@ -1,6 +1,6 @@
 // screens/caretaker/caretaker_booking_details.dart
+// ignore_for_file: empty_catches, deprecated_member_use
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:get/Get.dart';
 import 'package:http/http.dart' as http;
@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../../../../../constants/app_constants.dart';
 import '../../../../../utils/helper.dart';
 
@@ -25,7 +24,6 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
   bool isUpdating = false;
   String selectedStatus = 'Pending';
 
-  // Updated list to include "Booked" and match API values
   final List<String> statusList = [
     "Pending",
     "Booked",
@@ -42,7 +40,6 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
 
   void _initializeData() {
     final dynamic args = Get.arguments;
-
     if (args is Map<String, dynamic>) {
       bookingData = args;
     } else if (args is List &&
@@ -53,22 +50,13 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
       bookingData = {};
     }
 
-    // Safely get current status and normalize it
     String apiStatus = (bookingData['caretaker_booking_status'] ?? 'Pending')
         .toString()
         .trim();
-
-    // Normalize to match dropdown options
-    if (apiStatus.toLowerCase() == 'booked') {
-      selectedStatus = 'Booked';
-    } else if (apiStatus.toLowerCase() == 'in progress') {
-      selectedStatus = 'In Progress';
-    } else {
-      selectedStatus = statusList.firstWhere(
-        (s) => s.toLowerCase() == apiStatus.toLowerCase(),
-        orElse: () => 'Pending',
-      );
-    }
+    selectedStatus = statusList.firstWhere(
+      (s) => s.toLowerCase() == apiStatus.toLowerCase(),
+      orElse: () => 'Pending',
+    );
   }
 
   Widget _buildCard({
@@ -133,11 +121,13 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
       case 'CONFIRMED':
       case 'COMPLETED':
       case 'BOOKED':
+      case 'ON DUTY':
         return Colors.green.shade50;
       case 'IN PROGRESS':
       case 'PENDING':
         return Colors.orange.shade50;
       case 'CANCELLED':
+      case 'CANCELED':
         return Colors.red.shade50;
       default:
         return Colors.grey.shade100;
@@ -149,11 +139,13 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
       case 'CONFIRMED':
       case 'COMPLETED':
       case 'BOOKED':
+      case 'ON DUTY':
         return Colors.green.shade800;
       case 'IN PROGRESS':
       case 'PENDING':
         return Colors.orange.shade800;
       case 'CANCELLED':
+      case 'CANCELED':
         return Colors.red.shade800;
       default:
         return Colors.grey.shade800;
@@ -187,7 +179,6 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
   Future<void> _updateBookingStatus(String newStatus) async {
     if (isUpdating) return;
     setState(() => isUpdating = true);
-
     try {
       final token = await readStr('token');
       final profileId = await readStr('profileId');
@@ -207,7 +198,6 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
       );
 
       final res = json.decode(response.body);
-
       if (response.statusCode == 200 && res['status'] == true) {
         setState(() {
           selectedStatus = newStatus;
@@ -262,15 +252,34 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
 
     String formattedFrom = 'N/A', formattedTo = 'N/A';
     try {
-      if (dateFrom != 'N/A')
+      if (dateFrom != 'N/A') {
         formattedFrom =
             DateFormat('dd MMM yyyy').format(DateTime.parse(dateFrom));
-      if (dateTo != 'N/A')
+      }
+      if (dateTo != 'N/A') {
         formattedTo = DateFormat('dd MMM yyyy').format(DateTime.parse(dateTo));
+      }
     } catch (e) {}
 
     final Map<String, dynamic> caretakerDetails =
         bookingData['caretaker_details'] ?? {};
+    final Map<String, dynamic> caretakerUser = caretakerDetails['user'] ?? {};
+
+    print('Caretaker Details: $caretakerUser');
+
+    final String caretakerName =
+        "${caretakerUser['first_name'] ?? ''} ${caretakerUser['last_name'] ?? ''}"
+                .trim()
+                .isNotEmpty
+            ? "${caretakerUser['first_name'] ?? ''} ${caretakerUser['last_name'] ?? ''}"
+                .trim()
+            : "Caretaker #${caretakerDetails['caretaker_id'] ?? '??'}";
+
+    final String caretakerPhone =
+        caretakerUser['phone_number']?.toString() ?? 'N/A';
+    final String caretakerAddress =
+        caretakerUser['address']?.toString() ?? 'N/A';
+
     final String caretakerDesc =
         caretakerDetails['description']?.toString().split('.').first ??
             'Experienced Caretaker';
@@ -279,15 +288,11 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
         List<String>.from(caretakerDetails['caretaker_type'] ?? []);
     final double rating = (caretakerDetails['rating'] ?? 0).toDouble();
 
-    List<String> documentUrls =
-        List<String>.from(caretakerDetails['upload_documents'] ?? []);
-
     // Patient Profile
     String patientName = "Patient #${bookingData['patient_id'] ?? '??'}";
     String patientPhone = "N/A";
     String patientEmail = "N/A";
     String patientAddress = "N/A";
-
     final patientDetails =
         bookingData['patient_details']?['user'] as Map<String, dynamic>?;
     if (patientDetails != null) {
@@ -295,17 +300,15 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
       final last = patientDetails['last_name']?.toString() ?? '';
       final full = '$first $last'.trim();
       if (full.isNotEmpty) patientName = full;
-
       patientPhone = patientDetails['phone_number']?.toString() ?? 'N/A';
       patientEmail = patientDetails['email']?.toString() ?? 'N/A';
       patientAddress = patientDetails['address']?.toString() ?? 'N/A';
     }
-
     String avatarLetter =
         patientName.isNotEmpty ? patientName[0].toUpperCase() : "?";
 
     final bool showActionButtons =
-        !['Completed', 'Cancelled'].contains(currentStatus);
+        !['Completed', 'Cancelled', 'Canceled'].contains(currentStatus);
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -373,6 +376,7 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
             ),
             const SizedBox(height: 12),
 
+            // Booking Summary
             _buildCard(
               title: "Booking Summary",
               children: [
@@ -385,26 +389,68 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
                 _buildDetailRow("Shift", slots),
                 if (remark.isNotEmpty)
                   Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text("Note: $remark",
-                          style: TextStyle(
-                              color: Colors.grey[700],
-                              fontStyle: FontStyle.italic))),
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text("Note: $remark",
+                        style: TextStyle(
+                            color: Colors.grey[700],
+                            fontStyle: FontStyle.italic)),
+                  ),
               ],
             ),
             const SizedBox(height: 12),
 
+            // Caretaker Assigned - WITH NEW FIELDS
             _buildCard(
               title: "Caretaker Assigned",
               children: [
-                Text(caretakerDesc,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor:
+                          AppConstants.appPrimaryColor.withOpacity(0.15),
+                      child: Text(
+                        caretakerName.isNotEmpty
+                            ? caretakerName[0].toUpperCase()
+                            : "C",
+                        style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: AppConstants.appPrimaryColor),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(caretakerName,
+                              style: const TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(caretakerDesc,
+                              style: TextStyle(
+                                  color: Colors.grey[700], fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                    if (caretakerPhone != 'N/A')
+                      IconButton(
+                        icon: const Icon(Icons.phone,
+                            color: Colors.green, size: 26),
+                        onPressed: () => _callPatient(caretakerPhone),
+                        tooltip: "Call Caretaker",
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildDetailRow("Mobile", caretakerPhone),
+                _buildDetailRow("Address", caretakerAddress),
                 Row(children: [
                   Icon(Icons.location_on, size: 18, color: Colors.grey[700]),
                   const SizedBox(width: 6),
-                  Text(location)
+                  Expanded(
+                      child: Text(location,
+                          style: TextStyle(color: Colors.grey[700]))),
                 ]),
                 if (caretakerTypes.isNotEmpty) ...[
                   const SizedBox(height: 12),
@@ -412,13 +458,14 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
                       style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
                   Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: caretakerTypes
-                          .map((t) => Chip(
-                              label: Text(t),
-                              backgroundColor: Colors.blue.shade50))
-                          .toList()),
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: caretakerTypes
+                        .map((t) => Chip(
+                            label: Text(t),
+                            backgroundColor: Colors.blue.shade50))
+                        .toList(),
+                  ),
                 ],
                 if (rating > 0) ...[
                   const SizedBox(height: 12),
@@ -434,8 +481,9 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
                 ],
               ],
             ),
-
             const SizedBox(height: 12),
+
+            // Payment Summary
             _buildCard(
               title: "Payment Summary",
               children: [
@@ -445,8 +493,9 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
                 _buildDetailRow("Discount", "₹${bookingData['discount'] ?? 0}"),
               ],
             ),
-
             const SizedBox(height: 12),
+
+            // Status Card
             Card(
               color: _getStatusColor(currentStatus),
               elevation: 4,
@@ -466,6 +515,8 @@ class _CareTakerBookingDetailsState extends State<CareTakerBookingDetails> {
           ],
         ),
       ),
+
+      // Status Update Footer
       persistentFooterButtons: showActionButtons
           ? [
               Card(

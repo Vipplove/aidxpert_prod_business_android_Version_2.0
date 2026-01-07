@@ -285,10 +285,14 @@ class _LabAccountState extends State<LabAccount> {
               _buildMenuTile(
                 icon: Icons.health_and_safety_outlined,
                 title: "Edit Profile",
-                onTap: () => Get.toNamed(
-                  Routes.LABS_PROVIDER_REGISTRATION,
-                  arguments: {'type': 'update'},
-                ),
+                onTap: () async {
+                  final profileId = await readStr('profileId');
+
+                  Get.toNamed(
+                    Routes.LABS_PROVIDER_REGISTRATION,
+                    arguments: {"type": "update", "id": profileId},
+                  );
+                },
               ),
               _buildMenuTile(
                 icon: Icons.schedule_outlined,

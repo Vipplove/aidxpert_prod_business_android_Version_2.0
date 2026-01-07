@@ -41,7 +41,7 @@ class AppConstants {
   // API URLs
   static String get endpoint => isProduction
       ? 'https://prod.aidxpert.com/api'
-      : 'https://27ba3341d35a.ngrok-free.app/api/v1';
+      : 'https://81d402feec31.ngrok-free.app/api/v1';
 
   // Mobile Number
   static String whatsappNumber = '+918585056006';

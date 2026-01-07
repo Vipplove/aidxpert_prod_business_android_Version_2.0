@@ -395,8 +395,14 @@ class _AmbulanceAccountState extends State<AmbulanceAccount> {
           _buildMenuTile(
             icon: Icons.edit_outlined,
             title: "Edit Profile",
-            onTap: () => Get.toNamed(Routes.AMBULANCE_PROVIDER_REGISTRATION,
-                arguments: {"type": "update"}),
+            onTap: () async {
+              final profileId = await readStr('profileId');
+
+              Get.toNamed(
+                Routes.AMBULANCE_PROVIDER_REGISTRATION,
+                arguments: {"type": "update", "id": profileId},
+              );
+            },
           ),
           _buildMenuTile(
               icon: Icons.password_outlined,

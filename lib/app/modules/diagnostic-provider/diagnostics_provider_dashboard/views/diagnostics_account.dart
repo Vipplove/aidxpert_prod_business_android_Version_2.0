@@ -303,9 +303,14 @@ class _DiagnosticAccountState extends State<DiagnosticAccount> {
               _buildMenuTile(
                 icon: Icons.health_and_safety_outlined,
                 title: "Edit Profile",
-                onTap: () => Get.toNamed(
+                onTap: () async {
+                  final profileId = await readStr('profileId');
+
+                  Get.toNamed(
                     Routes.DIAGNOSTIC_PROVIDER_REGISTRATION,
-                    arguments: {"type": "update"}),
+                    arguments: {"type": "update", "id": profileId},
+                  );
+                },
               ),
               _buildMenuTile(
                   icon: Icons.schedule_outlined,
